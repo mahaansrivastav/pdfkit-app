@@ -1,7 +1,41 @@
 import { useState } from 'react';
-import { V, tools } from '../theme';
+import { getTheme, tools } from '../theme';
 
-export default function About({ setPage }) {
+function FeatureCard({ tool, isDark }) {
+  const V = getTheme(isDark);
+  const [hovered, setHovered] = useState(false);
+  
+  return (
+    <div 
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: V.bgCard, 
+        border: `1px solid ${V.border}`,
+        borderRadius: 12, 
+        padding: 18,
+        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
+        boxShadow: hovered ? `0 8px 20px rgba(0,0,0,${isDark ? '0.3' : '0.1'})` : 'none',
+      }}
+    >
+      <div style={{
+        width: 40, height: 40, borderRadius: 9, background: tool.bg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 20, marginBottom: 12,
+        transition: 'transform 0.25s ease',
+        transform: hovered ? 'scale(1.1)' : 'scale(1)',
+      }}>
+        {tool.emoji}
+      </div>
+      <h3 style={{ fontSize: 14, fontWeight: 700, color: V.textP, margin: '0 0 5px' }}>{tool.label}</h3>
+      <p style={{ fontSize: 12, color: V.textS, lineHeight: 1.65, margin: 0 }}>{tool.desc}</p>
+    </div>
+  );
+}
+
+export default function About({ setPage, isDark }) {
+  const V = getTheme(isDark);
   const [openFaq, setOpenFaq] = useState(null);
 
   const faqs = [
@@ -19,7 +53,7 @@ export default function About({ setPage }) {
       <div style={{
         display: 'inline-block', background: V.accentSoft, color: V.accentText,
         fontSize: 11, fontWeight: 700, padding: '5px 14px', borderRadius: 999,
-        marginBottom: 20, border: '1px solid rgba(99,102,241,0.2)',
+        marginBottom: 20, border: `1px solid ${isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.3)'}`,
       }}>
         ABOUT
       </div>
@@ -36,20 +70,7 @@ export default function About({ setPage }) {
       </h2>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 48 }}>
         {tools.map((t) => (
-          <div key={t.id} style={{
-            background: V.bgCard, border: `1px solid ${V.border}`,
-            borderRadius: 12, padding: 18,
-          }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 9, background: t.bg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20, marginBottom: 12,
-            }}>
-              {t.emoji}
-            </div>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: V.textP, margin: '0 0 5px' }}>{t.label}</h3>
-            <p style={{ fontSize: 12, color: V.textS, lineHeight: 1.65, margin: 0 }}>{t.desc}</p>
-          </div>
+          <FeatureCard key={t.id} tool={t} isDark={isDark} />
         ))}
       </div>
 
@@ -88,6 +109,7 @@ export default function About({ setPage }) {
           <div key={i} style={{
             background: V.bgCard, border: `1px solid ${V.border}`,
             borderRadius: 12, overflow: 'hidden',
+            transition: 'all 0.2s ease',
           }}>
             <button
               onClick={() => setOpenFaq(openFaq === i ? null : i)}
@@ -107,7 +129,7 @@ export default function About({ setPage }) {
               </span>
             </button>
             {openFaq === i && (
-              <div style={{ padding: '0 18px 14px', fontSize: 13, color: V.textS, lineHeight: 1.7 }} className="fade-up">
+              <div style={{ padding: '0 18px 14px', fontSize: 13, color: V.textS, lineHeight: 1.7 }}>
                 {faq.a}
               </div>
             )}
@@ -118,7 +140,7 @@ export default function About({ setPage }) {
       {/* CTA */}
       <div style={{
         background: V.accentSoft, borderRadius: 14, padding: 28, textAlign: 'center',
-        border: '1px solid rgba(99,102,241,0.2)',
+        border: `1px solid ${isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.3)'}`,
       }}>
         <p style={{ fontWeight: 800, fontSize: 17, color: V.textP, margin: '0 0 6px' }}>Ready to try it?</p>
         <p style={{ fontSize: 13, color: V.textS, margin: '0 0 18px' }}>No sign-up. No waiting. Just upload and go.</p>
@@ -128,6 +150,15 @@ export default function About({ setPage }) {
             padding: '11px 26px', background: V.accent, color: 'white',
             border: 'none', borderRadius: 9, fontWeight: 700,
             cursor: 'pointer', fontSize: 14,
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = V.accentH;
+            e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = V.accent;
+            e.currentTarget.style.transform = 'translateY(0)';
           }}
         >
           Open the tool →

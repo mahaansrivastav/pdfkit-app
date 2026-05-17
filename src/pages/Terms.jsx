@@ -1,4 +1,4 @@
-import { V } from '../theme';
+import { getTheme } from '../theme';
 
 const sections = [
   {
@@ -47,14 +47,16 @@ const sections = [
   },
 ];
 
-export default function Terms() {
+export default function Terms({ isDark }) {
+  const V = getTheme(isDark);
+  
   return (
     <div style={{ maxWidth: 700, margin: '0 auto', padding: '48px 20px' }}>
 
       <div style={{
         display: 'inline-block', background: V.accentSoft, color: V.accentText,
         fontSize: 11, fontWeight: 700, padding: '5px 14px', borderRadius: 999,
-        marginBottom: 20, border: '1px solid rgba(99,102,241,0.2)',
+        marginBottom: 20, border: `1px solid ${isDark ? 'rgba(99,102,241,0.2)' : 'rgba(99,102,241,0.3)'}`,
       }}>
         LEGAL
       </div>

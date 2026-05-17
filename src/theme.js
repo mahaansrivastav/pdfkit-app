@@ -1,7 +1,7 @@
 // Design tokens — your reusable design system
-// Import this in every component: import { V, tools } from '../theme'
+// Import this in every component: import { V, getTheme, tools } from '../theme'
 
-export const V = {
+export const darkTheme = {
   bgPage:     "#0B0F1A",
   bgCard:     "#141929",
   bgCardH:    "#1A2035",
@@ -16,7 +16,34 @@ export const V = {
   accentH:    "#4F52D4",
   accentSoft: "#1E1F4A",
   accentText: "#818CF8",
+  navBg:      "rgba(11,15,26,0.92)",
+  footerBg:   "#080B14",
 };
+
+export const lightTheme = {
+  bgPage:     "#FFFFFF",
+  bgCard:     "#F8F7F4",
+  bgCardH:    "#F0EFE9",
+  bgInput:    "#FFFFFF",
+  bgBadge:    "#E8E7E3",
+  border:     "#E5E4E0",
+  borderL:    "#D8D7D3",
+  textP:      "#1A1917",
+  textS:      "#57534E",
+  textM:      "#78716C",
+  accent:     "#6366F1",
+  accentH:    "#4F52D4",
+  accentSoft: "#EEF2FF",
+  accentText: "#4F46E5",
+  navBg:      "rgba(255,255,255,0.92)",
+  footerBg:   "#F8F7F4",
+};
+
+// Get current theme based on mode
+export const getTheme = (isDark) => isDark ? darkTheme : lightTheme;
+
+// For backwards compatibility, export V as dark theme (will be replaced by dynamic usage)
+export const V = darkTheme;
 
 export const tools = [
   {

@@ -1,9 +1,11 @@
-import { V } from '../theme';
+import { getTheme } from '../theme';
 
-export default function Footer({ setPage }) {
+export default function Footer({ setPage, isDark }) {
+  const V = getTheme(isDark);
+  
   return (
     <footer style={{
-      background: '#080B14',
+      background: V.footerBg,
       borderTop: `1px solid ${V.border}`,
       padding: '24px 20px',
     }}>
@@ -27,7 +29,10 @@ export default function Footer({ setPage }) {
               style={{
                 color: V.textM, background: 'none', border: 'none',
                 cursor: 'pointer', fontSize: 13, textTransform: 'capitalize',
+                transition: 'color 0.2s ease',
               }}
+              onMouseEnter={(e) => e.currentTarget.style.color = V.accent}
+              onMouseLeave={(e) => e.currentTarget.style.color = V.textM}
             >
               {p}
             </button>

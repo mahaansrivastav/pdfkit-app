@@ -1,13 +1,24 @@
-import { useRef, useCallback, useState } from 'react';
-import { V } from '../theme';
+import { useRef, useCallback, useState, useEffect } from 'react';
+import { getTheme } from '../theme';
 
-export default function UploadZone({ tool }) {
+export default function UploadZone({ tool, isDark }) {
+  const V = getTheme(isDark);
   const [files, setFiles]   = useState([]);
   const [drag, setDrag]     = useState(false);
   const [status, setStatus] = useState('idle'); // idle | processing | done
   const [password, setPassword] = useState('');
   const [pages, setPages]   = useState('');
+  const [borderOffset, setBorderOffset] = useState(0);
   const inputRef = useRef(null);
+
+  // Animated dashed border effect
+  useEffect(() => {
+    if (!drag) return;
+    const interval = setInterval(() => {
+      setBorderOffset((prev) => (prev + 1) % 20);
+    }, 50);
+    return () => clearInterval(interval);
+  }, [drag]);
 
   const handleFiles = useCallback((incoming) => {
     const pdfs = Array.from(incoming).filter((f) => f.name.endsWith('.pdf'));
@@ -27,15 +38,7 @@ export default function UploadZone({ tool }) {
   const handleProcess = async () => {
     if (!files.length) return;
     setStatus('processing');
-
-    // TODO: Replace with real API call
-    // const formData = new FormData();
-    // files.forEach(f => formData.append('files', f));
-    // const res = await fetch('https://your-api.com/merge', { method: 'POST', body: formData });
-    // const blob = await res.blob();
-    // downloadBlob(blob, 'result.pdf');
-
-    setTimeout(() => setStatus('done'), 2000); // mock for now
+    setTimeout(() => setStatus('done'), 2000);
   };
 
   const reset = () => {
@@ -43,6 +46,18 @@ export default function UploadZone({ tool }) {
     setStatus('idle');
     setPassword('');
     setPages('');
+  };
+
+  const dropZoneStyle = {
+    position: 'relative',
+    borderRadius: 12,
+    padding: '32px 20px',
+    textAlign: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    background: drag ? V.accentSoft : V.bgInput,
+    border: drag ? 'none' : `2px dashed ${V.borderL}`,
+    overflow: 'hidden',
   };
 
   return (
@@ -80,15 +95,32 @@ export default function UploadZone({ tool }) {
             onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
             onDragLeave={() => setDrag(false)}
             onClick={() => inputRef.current?.click()}
-            style={{
-              border: `2px dashed ${drag ? V.accent : V.borderL}`,
-              background: drag ? V.accentSoft : V.bgInput,
-              borderRadius: 12, padding: '32px 20px',
-              textAlign: 'center', cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
+            style={dropZoneStyle}
           >
-            <div style={{ fontSize: 28, marginBottom: 8, opacity: drag ? 1 : 0.5 }}>📤</div>
+            {/* Animated border when dragging */}
+            {drag && (
+              <div style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
+                borderRadius: 12,
+                border: `2px dashed ${V.accent}`,
+                backgroundImage: `repeating-linear-gradient(90deg, ${V.accent} 0, ${V.accent} 10px, transparent 10px, transparent 20px)`,
+                backgroundSize: '20px 2px',
+                backgroundPosition: `${borderOffset}px 0, ${borderOffset}px 100%, 0 ${borderOffset}px, 100% ${borderOffset}px`,
+                backgroundRepeat: 'repeat-x, repeat-x, repeat-y, repeat-y',
+                pointerEvents: 'none',
+                animation: 'borderDash 0.5s linear infinite',
+              }} />
+            )}
+            <div style={{ 
+              fontSize: 28, 
+              marginBottom: 8, 
+              opacity: drag ? 1 : 0.5,
+              transform: drag ? 'scale(1.1)' : 'scale(1)',
+              transition: 'all 0.2s ease',
+            }}>
+              📤
+            </div>
             <p style={{ fontWeight: 600, color: V.textP, fontSize: 14, margin: 0 }}>
               Drop PDF{tool.multi ? 's' : ''} here or{' '}
               <span style={{ color: V.accentText }}>browse</span>
@@ -109,12 +141,13 @@ export default function UploadZone({ tool }) {
 
         {/* File list */}
         {files.length > 0 && status !== 'done' && (
-          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }} className="fade-up">
+          <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
             {files.map((f, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '8px 12px', background: V.bgInput,
                 borderRadius: 8, border: `1px solid ${V.border}`,
+                transition: 'all 0.2s ease',
               }}>
                 <span style={{ fontSize: 14 }}>📄</span>
                 <span style={{ flex: 1, fontSize: 12, color: V.textP, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -125,7 +158,9 @@ export default function UploadZone({ tool }) {
                 </span>
                 <button
                   onClick={() => removeFile(i)}
-                  style={{ border: 'none', background: 'none', color: V.textM, cursor: 'pointer', fontSize: 18, lineHeight: 1 }}
+                  style={{ border: 'none', background: 'none', color: V.textM, cursor: 'pointer', fontSize: 18, lineHeight: 1, transition: 'color 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#EF4444'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = V.textM}
                 >
                   ×
                 </button>
@@ -136,7 +171,7 @@ export default function UploadZone({ tool }) {
 
         {/* Password input */}
         {tool.id === 'password' && files.length > 0 && status !== 'done' && (
-          <div style={{ marginTop: 14 }} className="fade-up">
+          <div style={{ marginTop: 14 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: V.textS, display: 'block', marginBottom: 5 }}>
               Set password
             </label>
@@ -149,14 +184,17 @@ export default function UploadZone({ tool }) {
                 width: '100%', padding: '9px 12px', borderRadius: 8,
                 border: `1px solid ${V.borderL}`, background: V.bgInput,
                 color: V.textP, fontSize: 13, outline: 'none',
+                transition: 'border-color 0.2s ease',
               }}
+              onFocus={(e) => e.currentTarget.style.borderColor = V.accent}
+              onBlur={(e) => e.currentTarget.style.borderColor = V.borderL}
             />
           </div>
         )}
 
         {/* Page range input */}
         {tool.id === 'remove' && files.length > 0 && status !== 'done' && (
-          <div style={{ marginTop: 14 }} className="fade-up">
+          <div style={{ marginTop: 14 }}>
             <label style={{ fontSize: 12, fontWeight: 600, color: V.textS, display: 'block', marginBottom: 5 }}>
               Pages to remove
             </label>
@@ -169,7 +207,10 @@ export default function UploadZone({ tool }) {
                 width: '100%', padding: '9px 12px', borderRadius: 8,
                 border: `1px solid ${V.borderL}`, background: V.bgInput,
                 color: V.textP, fontSize: 13, outline: 'none',
+                transition: 'border-color 0.2s ease',
               }}
+              onFocus={(e) => e.currentTarget.style.borderColor = V.accent}
+              onBlur={(e) => e.currentTarget.style.borderColor = V.borderL}
             />
             <p style={{ fontSize: 11, color: V.textM, margin: '5px 0 0' }}>
               Comma-separated or ranges like 5-8
@@ -181,13 +222,23 @@ export default function UploadZone({ tool }) {
         {files.length > 0 && status === 'idle' && (
           <button
             onClick={handleProcess}
-            className="fade-up"
             style={{
               marginTop: 16, width: '100%', padding: 12,
               background: V.accent, color: 'white', border: 'none',
               borderRadius: 10, fontSize: 14, fontWeight: 700,
               cursor: 'pointer', letterSpacing: '-0.2px',
-              transition: 'background 0.15s',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = V.accentH;
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(99, 102, 241, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = V.accent;
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(99, 102, 241, 0.3)';
             }}
           >
             {tool.id === 'merge'    && 'Merge PDFs →'}
@@ -199,7 +250,7 @@ export default function UploadZone({ tool }) {
 
         {/* Processing */}
         {status === 'processing' && (
-          <div style={{ marginTop: 16, textAlign: 'center', padding: '20px 0' }} className="fade-up">
+          <div style={{ marginTop: 16, textAlign: 'center', padding: '20px 0' }}>
             <div className="spinner" />
             <p style={{ margin: '10px 0 0', fontSize: 13, color: V.textS }}>Processing your PDF…</p>
           </div>
@@ -207,7 +258,7 @@ export default function UploadZone({ tool }) {
 
         {/* Done */}
         {status === 'done' && (
-          <div style={{ padding: '24px 0', textAlign: 'center' }} className="fade-up">
+          <div style={{ padding: '24px 0', textAlign: 'center' }}>
             <div style={{
               width: 48, height: 48,
               background: 'rgba(16,185,129,0.15)',
@@ -230,15 +281,34 @@ export default function UploadZone({ tool }) {
                   padding: '8px 16px', borderRadius: 8,
                   border: `1px solid ${V.borderL}`, background: V.bgBadge,
                   color: V.textS, fontWeight: 600, cursor: 'pointer', fontSize: 13,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = V.accent;
+                  e.currentTarget.style.color = V.textP;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = V.borderL;
+                  e.currentTarget.style.color = V.textS;
                 }}
               >
                 Process another
               </button>
-              <button style={{
-                padding: '8px 16px', borderRadius: 8, border: 'none',
-                background: V.accent, color: 'white', fontWeight: 700,
-                cursor: 'pointer', fontSize: 13,
-              }}>
+              <button 
+                style={{
+                  padding: '8px 16px', borderRadius: 8, border: 'none',
+                  background: V.accent, color: 'white', fontWeight: 700,
+                  cursor: 'pointer', fontSize: 13, transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = V.accentH;
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = V.accent;
+                  e.currentTarget.style.transform = 'translateY(0)';
+                }}
+              >
                 ↓ Download
               </button>
             </div>
